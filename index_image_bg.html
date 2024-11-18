@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Layering Example</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    #background-canvas,
+    #overlay-canvas {
+      position: absolute; /* Position both canvases absolutely */
+      top: 0;
+      left: 0;
+    }
+
+    #zoom-slider {
+      margin-top: 20px;
+    }
+
+    #upload-image {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="background-canvas" width="1000" height="1000"></canvas>
+  <canvas id="overlay-canvas" width="1000" height="1000"></canvas>
+  <input type="range" id="zoom-slider" min="0.5" max="2" step="0.1" value="1">
+  <input type="file" id="upload-image" accept="image/*">
+
+  <script>
+    const backgroundCanvas = document.getElementById('background-canvas');
+    const overlayCanvas = document.getElementById('overlay-canvas');
+    const backgroundCtx = backgroundCanvas.getContext('2d');
+    const overlayCtx = overlayCanvas.getContext('2d');
+
+    const basePX = 1000; // 1000 squares
+    const squareSize = 10; // Size of each square in pixels
+    const colors = Array(basePX * basePX).fill('white'); // Color array to keep track of square colors
+    const selectedPixels = new Set(); // Set to keep track of selected pixels
+    let scale = 1; // Current scale value for zooming
+    let isSelecting = false; // Track selection state
+    let startX, startY; // Starting coordinates for selection
+
+    // Draw the grid on the background canvas
+    function drawGrid() {
+      for (let x = 0; x < basePX; x++) {
+        for (let y = 0; y < basePX; y++) {
+          backgroundCtx.fillStyle = colors[x + y * basePX]; // Use color from array
+          backgroundCtx.fillRect(x * squareSize, y * squareSize, squareSize, squareSize);
+          backgroundCtx.strokeStyle = '#ccc'; // Border color
+          backgroundCtx.strokeRect(x * squareSize, y * squareSize, squareSize, squareSize);
+        }
+      }
+    }
+
+    // Toggle square color on click and handle selection
+    function toggleSquareColor(event) {
+      const rect = overlayCanvas.getBoundingClientRect();
+      const mouseX = (event.clientX - rect.left) / scale; // Adjust for current scale
+      const mouseY = (event.clientY - rect.top) / scale; // Adjust for current scale
+      const x = Math.floor(mouseX / squareSize);
+      const y = Math.floor(mouseY / squareSize);
+
+      if (event.type === 'mousedown') {
+        isSelecting = true;
+        startX = x;
+        startY = y;
+        selectPixels(x, y);
+      } else if (event.type === 'mousemove' && isSelecting) {
+        selectPixels(x, y);
+      } else if (event.type === 'mouseup') {
+        isSelecting = false;
+      }
+    }
+
+    function selectPixels(x, y) {
+      if (x >= 0 && x < basePX && y >= 0 && y < basePX) {
+        const index = x + y * basePX;
+        selectedPixels.add(index);
+        overlayCtx.fillStyle = 'lightblue'; // Highlight selected pixels
+        overlayCtx.fillRect(x * squareSize, y * squareSize, squareSize, squareSize); // Draw the square
+        overlayCtx.strokeStyle = '#ccc'; // Border color
+        overlayCtx.strokeRect(x * squareSize, y * squareSize, squareSize, squareSize); // Redraw border
+      }
+    }
+
+    // Upload and apply image as background to selected area
+    function applyBackgroundImage(image) {
+      const img = new Image();
+      img.onload = () => {
+        // Determine bounds of selected pixels
+        const minX = Math.min(...Array.from(selectedPixels).map(index => index % basePX));
+        const minY = Math.min(...Array.from(selectedPixels).map(index => Math.floor(index / basePX)));
+        const maxX = Math.max(...Array.from(selectedPixels).map(index => index % basePX));
+        const maxY = Math.max(...Array.from(selectedPixels).map(index => Math.floor(index / basePX)));
+
+        // Calculate width and height of the area
+        const width = (maxX - minX + 1) * squareSize;
+        const height = (maxY - minY + 1) * squareSize;
+
+        // Draw the image over the selected area on the background canvas
+        backgroundCtx.drawImage(img, minX * squareSize, minY * squareSize, width, height);
+
+        // Reset the selected pixels
+        // selectedPixels.clear();
+        // overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); // Clear the overlay
+      };
+      img.src = URL.createObjectURL(image);
+    }
+
+    // Zoom functionality
+    function setupZoom() {
+      const zoomSlider = document.getElementById('zoom-slider');
+      zoomSlider.addEventListener('input', (event) => {
+        scale = event.target.value; // Update the scale value
+        overlayCanvas.style.transform = `scale(${scale})`;
+        overlayCanvas.style.transformOrigin = '0 0';
+        backgroundCanvas.style.transform = `scale(${scale})`;
+        backgroundCanvas.style.transformOrigin = '0 0';
+      });
+    }
+
+    // Handle image upload
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        applyBackgroundImage(file);
+      }
+    }
+
+    // Initialize grid and zoom functionality
+    drawGrid();
+    overlayCanvas.addEventListener('mousedown', toggleSquareColor);
+    overlayCanvas.addEventListener('mousemove', toggleSquareColor);
+    overlayCanvas.addEventListener('mouseup', toggleSquareColor);
+    document.getElementById('upload-image').addEventListener('change', handleImageUpload);
+    setupZoom();
+    console.log('Grid and zoom setup successful');
+  </script>
+</body>
+</html>

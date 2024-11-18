@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1000x1000 Selectable Squares Grid</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    canvas {
+      border: 1px solid #ccc;
+      image-rendering: pixelated; /* Ensures crisp square edges when zoomed */
+    }
+    
+    #zoom-slider {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="grid-canvas" width="1000" height="1000"></canvas>
+  <input type="range" id="zoom-slider" min="0.5" max="2" step="0.1" value="1">
+
+  <script>
+    const canvas = document.getElementById('grid-canvas');
+    const ctx = canvas.getContext('2d');
+    const basePX = 1000; // 1000 squares
+    const squareSize = 10; // Size of each square in pixels
+    const colors = Array(basePX * basePX).fill('white'); // Color array to keep track of square colors
+    let scale = 1; // Current scale value for zooming
+
+    // Draw the grid
+    function drawGrid() {
+      for (let x = 0; x < basePX; x++) {
+        for (let y = 0; y < basePX; y++) {
+          ctx.fillStyle = colors[x + y * basePX]; // Use color from array
+          ctx.fillRect(x * squareSize, y * squareSize, squareSize, squareSize);
+          ctx.strokeStyle = '#ccc'; // Border color
+          ctx.strokeRect(x * squareSize, y * squareSize, squareSize, squareSize);
+        }
+      }
+    }
+    
+    // Toggle square color on click
+    function toggleSquareColor(event) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = (event.clientX - rect.left) / scale; // Adjust for current scale
+      const mouseY = (event.clientY - rect.top) / scale; // Adjust for current scale
+      const x = Math.floor(mouseX / squareSize);
+      const y = Math.floor(mouseY / squareSize);
+      
+      // Calculate the position to change color
+      if (x >= 0 && x < basePX && y >= 0 && y < basePX) {
+        const index = x + y * basePX;
+        colors[index] = colors[index] === 'green' ? 'grey' : 'green'; // Toggle color
+        ctx.fillStyle = colors[index]; // Set new color
+        ctx.fillRect(x * squareSize, y * squareSize, squareSize, squareSize); // Draw the square
+        ctx.strokeStyle = '#ccc'; // Border color
+        ctx.strokeRect(x * squareSize, y * squareSize, squareSize, squareSize); // Redraw border
+      }
+    }
+    
+    // Zoom functionality
+    function setupZoom() {
+      const zoomSlider = document.getElementById('zoom-slider');
+      zoomSlider.addEventListener('input', (event) => {
+        scale = event.target.value; // Update the scale value
+        canvas.style.transform = `scale(${scale})`;
+        canvas.style.transformOrigin = '0 0';
+      });
+    }
+    
+    // Initialize grid and zoom functionality
+    drawGrid();
+    canvas.addEventListener('click', toggleSquareColor);
+    setupZoom();
+    console.log('Grid and zoom setup successful');
+  </script>
+</body>
+</html>

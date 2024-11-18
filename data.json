@@ -1,0 +1,20 @@
+[
+    {
+        "startX": "500",
+        "startY": "460",
+        "width": "110",
+        "height": "100"
+    },
+    {
+        "startX": "190",
+        "startY": "740",
+        "width": "240",
+        "height": "40"
+    },
+    {
+        "startX": "820",
+        "startY": "520",
+        "width": "50",
+        "height": "260"
+    }
+]
