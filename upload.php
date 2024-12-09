@@ -3,7 +3,7 @@
     $startY = $_GET['startY'];
     $width = $_GET['width'] * 10;
     $height = $_GET['height'] * 10;
-    var_dump($_GET);
+    // var_dump($_GET);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,7 +62,7 @@
 
     <div id="result">
         <h2>Resulting Image:</h2>
-        <img id="outputImage" alt="Resulting image will appear here">
+        <img id="outputImage" alt="Resulting image will appear here" src="background.png">
     </div>
 </div>
 
@@ -134,7 +134,7 @@
             formData.append('height', height);
 
             // Send the cropped image to the PHP script
-            fetch('process_image.php', {
+            fetch('process-image.php', {
                 method: 'POST',
                 body: formData
             })

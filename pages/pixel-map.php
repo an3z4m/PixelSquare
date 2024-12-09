@@ -128,14 +128,14 @@
     <div id="popup-overlay">
         <div id="popup-content">
             <h2>Upload Your Image</h2>
-            <iframe src="upload.php"></iframe>
+            <iframe src="<?php echo ROOT_THEME_URL.'/upload.php'; ?>"></iframe>
             <button id="close-popup">Close</button>
         </div>
     </div>
 
     <script>
         // Path to the JSON file
-const jsonFilePath = 'data.json';
+const jsonFilePath = "<?php echo ROOT_THEME_URL.'/data.json'; ?>";
 
 var reservedAreas;
 // Function to load and process the JSON file
@@ -168,6 +168,8 @@ async function loadJsonData() {
     }
 }
 
+reservedAreas = loadJsonData();
+
 console.log("reservedAreas:"+reservedAreas);
 if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
 
@@ -182,7 +184,7 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
     
         // Load the background image
         const background = new Image();
-        background.src = 'background.png';
+        background.src = '<?php echo ROOT_THEME_URL; ?>/background.png';
     
         background.onload = () => {
             ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
@@ -292,6 +294,8 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
                 const right = Math.max(startX, endX) * 10;
                 const bottom = Math.max(startY, endY) * 10;
 
+                console.log(left, top, right, bottom);
+
                 if (isSelectionValid(left, top, right, bottom)) {
                     const width = Math.abs(endX - startX) + 1;
                     const height = Math.abs(endY - startY) + 1;
@@ -303,7 +307,7 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
     
                     // Pass selection coordinates and size to the iframe
                     const iframe = document.querySelector('#popup-content iframe');
-                    iframe.src = `upload.php?startX=${left}&startY=${top}&width=${width}&height=${height}`;
+                    iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${left}&startY=${top}&width=${width}&height=${height}`;
                 } else {
                     alert('Selection overlaps with a reserved area. Please try again.');
                     clearSelection();
