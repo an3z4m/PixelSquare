@@ -16,6 +16,9 @@
             border: 1px solid #ccc;
             image-rendering: pixelated;
             cursor: crosshair;
+            background-position: center;
+            background-size: cover;
+            background-image: url('<?php echo ROOT_THEME_URL; ?>/background.webp?nocache=<?php echo time(); ?>');
         }
 
         #info {
@@ -183,15 +186,18 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
         let startX, startY, endX, endY;
     
         // Load the background image
-        const background = new Image();
-        background.src = '<?php echo ROOT_THEME_URL; ?>/background.png';
+        // const background = new Image();
+        // background.src = '<?php echo ROOT_THEME_URL; ?>/background.webp';
     
-        background.onload = () => {
-            ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-            drawGrid();
-            drawReservedAreas();
-        };
+        // background.onload = () => {
+        //     ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+        //     drawGrid();
+        //     drawReservedAreas();
+        // };
     
+        drawGrid();
+        drawReservedAreas();
+
         // Draw a 100x100 grid on top of the background
         function drawGrid() {
             ctx.strokeStyle = 'rgba(0, 255, 0, 1)'; // Light white grid lines
@@ -254,7 +260,7 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
     
         // Clear selection
         function clearSelection() {
-            ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+            // ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
             drawGrid();
             drawReservedAreas();
             document.getElementById('clear-selection').style.display = 'none';
@@ -278,7 +284,10 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
                 endX = Math.floor((event.clientX - rect.left) / squareSize);
                 endY = Math.floor((event.clientY - rect.top) / squareSize);
     
-                ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+                // ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+                // Clear the canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
                 drawGrid();
                 drawReservedAreas();
                 drawSelectionRectangle();

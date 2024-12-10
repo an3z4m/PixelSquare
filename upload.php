@@ -1,8 +1,8 @@
 <?php 
-    $startX = $_GET['startX'];
-    $startY = $_GET['startY'];
-    $width = $_GET['width'] * 10;
-    $height = $_GET['height'] * 10;
+    $startX = $_GET['startX'] * 5;
+    $startY = $_GET['startY'] * 5;
+    $width = $_GET['width'] * 10 * 5;
+    $height = $_GET['height'] * 10 * 5;
     // var_dump($_GET);
 ?>
 <!DOCTYPE html>
@@ -62,7 +62,7 @@
 
     <div id="result">
         <h2>Resulting Image:</h2>
-        <img id="outputImage" alt="Resulting image will appear here" src="background.png">
+        <img id="outputImage" alt="Resulting image will appear here" src="background.webp">
     </div>
 </div>
 

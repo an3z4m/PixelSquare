@@ -1,7 +1,4 @@
 <?php
-
-
-
 // Check if an image was uploaded
 if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
 
@@ -9,57 +6,89 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
 
     // Create an associative array to represent the row
     $row = [
-        'startX' => $_POST['startX'],
-        'startY' => $_POST['startY'],
-        'width' => $_POST['width'],
-        'height' => $_POST['height'],
+        'startX' => $_POST['startX'] / 5,
+        'startY' => $_POST['startY'] / 5,
+        'width' => $_POST['width'] / 5, // Target width in the background image
+        'height' => $_POST['height'] / 5, // Target height in the background image
     ];
 
     save_business_card($row);
 
     $uploadedImagePath = $_FILES['image']['tmp_name'];
 
-    // $input_file_path  = 'background-empty.png';
-    $output_file_path = 'background.png';
+    // Path to the high-resolution background image
+    $inputFilePath = 'background.webp';
+    $outputFilePath = 'background.webp';//'output.webp';
 
-    // Load the background image (1000x1000px)
-    $background = imagecreatefrompng($output_file_path);
+    // $inputFilePath = 'background-tmp.webp';
+    // copy($outputFilePath, $inputFilePath);
+
+    // Load the high-resolution background image
+    $background = imagecreatefromwebp($inputFilePath);
 
     // Get dimensions of the background
     $backgroundWidth = imagesx($background);
     $backgroundHeight = imagesy($background);
 
-    // Load the uploaded small image (50x50px)
-    $smallImage = imagecreatefrompng($uploadedImagePath);
+    // Load the uploaded image
+    $uploadedImage = imagecreatefrompng($uploadedImagePath); // Assuming input is PNG
 
-    // Get dimensions of the small image
-    $smallImageWidth = imagesx($smallImage);
-    $smallImageHeight = imagesy($smallImage);
+    // Get dimensions of the uploaded image
+    $uploadedImageWidth = imagesx($uploadedImage);
+    $uploadedImageHeight = imagesy($uploadedImage);
 
-    // Calculate the position to center the small image
-    $xPos = $_POST['startX']; //($backgroundWidth - $smallImageWidth) / 2;
-    $yPos = $_POST['startY']; //($backgroundHeight - $smallImageHeight) / 2;
+    // Target size for the image in the background
+    $targetWidth = $_POST['width']; // Width in the background
+    $targetHeight = $_POST['height']; // Height in the background
 
-    // $xPos = rand(0,1000 - $smallImageWidth); //($backgroundWidth - $smallImageWidth) / 2;
-    // $yPos = rand(0,1000 - $smallImageHeight); //($backgroundHeight - $smallImageHeight) / 2;
+    // Position in the background
+    $xPos = $_POST['startX'];
+    $yPos = $_POST['startY'];
 
-    // Merge the images
-    imagecopy($background, $smallImage, $xPos, $yPos, 0, 0, $smallImageWidth, $smallImageHeight);
+    // Create a true color image for resizing
+    $resizedImage = imagecreatetruecolor($targetWidth, $targetHeight);
+    imagesavealpha($resizedImage, true); // Preserve alpha transparency
+    $transparent = imagecolorallocatealpha($resizedImage, 0, 0, 0, 127);
+    imagefill($resizedImage, 0, 0, $transparent);
+
+    // Resample the uploaded image into the smaller target size
+    imagecopyresampled(
+        $resizedImage,      // Destination image
+        $uploadedImage,     // Source image
+        0, 0,               // Destination x, y
+        0, 0,               // Source x, y
+        $targetWidth,       // Destination width
+        $targetHeight,      // Destination height
+        $uploadedImageWidth, // Source width
+        $uploadedImageHeight // Source height
+    );
+
+    // Merge the resized image onto the background
+    imagecopy(
+        $background,
+        $resizedImage,
+        $xPos,
+        $yPos,
+        0, 0,
+        $targetWidth,
+        $targetHeight
+    );
+
+    // Save the high-quality WebP output
+    imagewebp($background, $outputFilePath, 90); // Quality set to 90
+
 
     // Set header to output image directly
-    header('Content-Type: image/png');
+    header('Content-Type: image/webp');
 
-    // Output the final image
-    imagepng($background, $output_file_path);
-
-    imagepng($background);
-    // imagepng($smallImage);
+    // Output the final image (optional for debugging)
+    imagewebp($background);
 
     // Free up memory
     imagedestroy($background);
-    imagedestroy($smallImage);
+    imagedestroy($uploadedImage);
+    imagedestroy($resizedImage);
 
 } else {
     echo "Error uploading image.";
 }
-?>
