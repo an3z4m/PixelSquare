@@ -1,8 +1,10 @@
 <?php 
-    $startX = $_GET['startX'] * 5;
-    $startY = $_GET['startY'] * 5;
-    $width = $_GET['width'] * 10 * 5;
-    $height = $_GET['height'] * 10 * 5;
+	$zoom_factor = 10;
+
+    $startX = $_GET['startX'] * $zoom_factor;
+    $startY = $_GET['startY'] * $zoom_factor;
+    $width = $_GET['width'] * 10 * $zoom_factor;
+    $height = $_GET['height'] * 10 * $zoom_factor;
     // var_dump($_GET);
 ?>
 <!DOCTYPE html>
@@ -62,7 +64,7 @@
 
     <div id="result">
         <h2>Resulting Image:</h2>
-        <img id="outputImage" alt="Resulting image will appear here" src="maps/background.webp">
+        <img id="outputImage" alt="Resulting image will appear here" src="background.webp?nocache=<?php echo time(); ?>">
     </div>
 </div>
 
