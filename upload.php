@@ -62,7 +62,7 @@
 
     <div id="result">
         <h2>Resulting Image:</h2>
-        <img id="outputImage" alt="Resulting image will appear here" src="background.webp">
+        <img id="outputImage" alt="Resulting image will appear here" src="maps/background.webp">
     </div>
 </div>
 

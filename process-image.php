@@ -17,8 +17,8 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
     $uploadedImagePath = $_FILES['image']['tmp_name'];
 
     // Path to the high-resolution background image
-    $inputFilePath = 'background.webp';
-    $outputFilePath = 'background.webp';//'output.webp';
+    $inputFilePath = 'maps/background.webp';
+    $outputFilePath = 'maps/background.webp';//'output.webp';
 
     // $inputFilePath = 'background-tmp.webp';
     // copy($outputFilePath, $inputFilePath);

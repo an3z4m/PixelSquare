@@ -40,5 +40,29 @@
         "startY": 70,
         "width": 180,
         "height": 120
+    },
+    {
+        "startX": 77,
+        "startY": 65,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 77,
+        "startY": 65,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 77,
+        "startY": 65,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 77,
+        "startY": 68,
+        "width": 10,
+        "height": 10
     }
 ]
