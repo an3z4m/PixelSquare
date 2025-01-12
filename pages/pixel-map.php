@@ -18,7 +18,7 @@
             cursor: pointer;
             background-position: center;
             background-size: cover;
-            background-image: url('<?php echo ROOT_THEME_URL; ?>/maps/background.webp?nocache=<?php echo time(); ?>');
+            background-image: url('<?php echo ROOT_THEME_URL; ?>/background.webp?nocache=<?php echo time(); ?>');
         }
 
         #info {
@@ -203,7 +203,7 @@
 
                 // Pass selection coordinates and size to the iframe
                 const iframe = document.querySelector('#popup-content iframe');
-                iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${left}&startY=${top}&width=${width}&height=${height}`;
+                iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${x}&startY=${y}&width=${width}&height=${height}`;
               
             } else {
                 alert('This pixel is already reserved!');

@@ -3,12 +3,12 @@
 $request_uri = $_SERVER['REQUEST_URI'];
 
 // Render the content conditionally
-if (strpos($request_uri, '/signup')) {
+if (strpos($request_uri, '/signup') !== false) {
     include_once 'pages/create-profile.php'; exit;
 }
 
 // Render the content conditionally
-if (strpos($request_uri, '/user-profile')) {
+if (strpos($request_uri, '/user-profile') !== false) {
     include_once 'pages/user-profile.php'; exit;
 }
 

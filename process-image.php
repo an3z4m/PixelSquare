@@ -3,13 +3,13 @@
 if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
 
     include 'save-business-card.php';
-
+	$zoom_factor = 10;
     // Create an associative array to represent the row
     $row = [
-        'startX' => $_POST['startX'] / 5,
-        'startY' => $_POST['startY'] / 5,
-        'width' => $_POST['width'] / 5, // Target width in the background image
-        'height' => $_POST['height'] / 5, // Target height in the background image
+        'startX' => $_POST['startX'] / $zoom_factor ,
+        'startY' => $_POST['startY'] / $zoom_factor ,
+        'width' => $_POST['width'] / $zoom_factor , // Target width in the background image
+        'height' => $_POST['height'] / $zoom_factor , // Target height in the background image
     ];
 
     save_business_card($row);
@@ -17,8 +17,8 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
     $uploadedImagePath = $_FILES['image']['tmp_name'];
 
     // Path to the high-resolution background image
-    $inputFilePath = 'maps/background.webp';
-    $outputFilePath = 'maps/background.webp';//'output.webp';
+    $inputFilePath = 'background.webp';
+    $outputFilePath = 'background.webp';//'output.webp';
 
     // $inputFilePath = 'background-tmp.webp';
     // copy($outputFilePath, $inputFilePath);
