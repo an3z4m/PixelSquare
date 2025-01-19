@@ -25,11 +25,6 @@
             margin-top: 20px;
         }
 
-        #clear-selection {
-            display: none;
-            margin: 5px;
-        }
-
         /* Bottom bar styles */
         #bottom-bar {
             position: fixed;
@@ -120,7 +115,6 @@
 
     <div id="info">
         <p>Select a rectangular area to claim.</p>
-        <button id="clear-selection">Clear Selection</button>
     </div>
 
     <div id="bottom-bar">
@@ -178,165 +172,99 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
 
     </script>
     <script>
-        const canvas = document.getElementById('grid-canvas');
-        const ctx = canvas.getContext('2d');
-        const squareSize = 10; // Each "pixel" block size
+    const canvas = document.getElementById('grid-canvas');
+    const ctx = canvas.getContext('2d');
+    const squareSize = 10; // Each "pixel" block size
 
-        let isDragging = false;
-        let startX, startY, endX, endY;
-    
-        // Load the background image
-        // const background = new Image();
-        // background.src = '<?php echo ROOT_THEME_URL; ?>/background.webp';
-    
-        // background.onload = () => {
-        //     ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-        //     drawGrid();
-        //     drawReservedAreas();
-        // };
-    
-        drawGrid();
-        drawReservedAreas();
+    drawGrid();
+    drawReservedAreas();
 
-        // Draw a 100x100 grid on top of the background
-        function drawGrid() {
-            ctx.strokeStyle = 'rgba(0, 255, 0, 1)'; // Light white grid lines
-            ctx.lineWidth = 0.2;
-    
-            for (let x = 0; x <= canvas.width; x += squareSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
-            }
-    
-            for (let y = 0; y <= canvas.height; y += squareSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
+    // Draw a 100x100 grid on top of the background
+    function drawGrid() {
+        ctx.strokeStyle = 'rgba(0, 255, 0, 1)'; // Light white grid lines
+        ctx.lineWidth = 0.2;
+
+        for (let x = 0; x <= canvas.width; x += squareSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
         }
-    
-        // Draw reserved areas on the canvas
-        function drawReservedAreas() {
-            console.log("reservedAreas.length;"+reservedAreas.length);
-            if(reservedAreas.length == 0) return;
-            reservedAreas.forEach(area => {
-                ctx.fillStyle = 'rgba(0,0,255,0.5)';
-                ctx.fillRect(area.startX * squareSize, area.startY * squareSize, area.width, area.height);
-                ctx.strokeStyle = '#ccc';
-                ctx.strokeRect(area.startX * squareSize, area.startY * squareSize, area.width, area.height);
-            });
-        }
-    
-        // Check if the selection overlaps with reserved areas
-        function isSelectionValid(startX, startY, endX, endY) {
-            for (const area of reservedAreas) {
 
-                const overlapX = Math.max(startX, area.startX) <= Math.min(endX, parseInt(area.startX) + parseInt(area.width));
-                const overlapY = Math.max(startY, area.startY) <= Math.min(endY, parseInt(area.startY) + parseInt(area.height));
-
-                if (overlapX && overlapY) {
-                    return false; // Overlap detected
-                }
-            }
-            return true;
+        for (let y = 0; y <= canvas.height; y += squareSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
         }
-    
-        // Draw selection rectangle
-        function drawSelectionRectangle() {
-            if (startX !== undefined && startY !== undefined && endX !== undefined && endY !== undefined) {
-                const left = Math.min(startX, endX);
-                const top = Math.min(startY, endY);
-                const width = Math.abs(endX - startX) + 1;
-                const height = Math.abs(endY - startY) + 1;
-    
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(left * squareSize, top * squareSize, width * squareSize, height * squareSize);
+    }
+
+    // Draw reserved areas on the canvas
+    function drawReservedAreas() {
+        if (reservedAreas.length === 0) return;
+        reservedAreas.forEach(area => {
+            ctx.fillStyle = 'rgba(0,0,255,0.2)';
+            ctx.fillRect(area.startX, area.startY, area.width, area.height);
+            ctx.strokeStyle = '#ccc';
+            ctx.strokeRect(area.startX, area.startY, area.width, area.height);
+        });
+    }
+
+    // Check if the clicked square is in a reserved area
+    function isSelectionValid(x, y) {
+        for (const area of reservedAreas) {
+            const withinX = x >= area.startX && x <= (area.startX + (area.width / squareSize));
+            const withinY = y >= area.startY && y <= (area.startY + (area.height / squareSize));
+
+            if (withinX && withinY) {
+                return false; // Overlap detected
             }
         }
-    
-        // Clear selection
-        function clearSelection() {
-            // ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+        return true;
+    }
+
+    // Handle click or touch events
+    canvas.addEventListener('click', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickedX = Math.floor((event.clientX - rect.left) / squareSize);
+        const clickedY = Math.floor((event.clientY - rect.top) / squareSize);
+
+        if (isSelectionValid(clickedX, clickedY)) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawGrid();
             drawReservedAreas();
-            document.getElementById('clear-selection').style.display = 'none';
-            document.getElementById('bottom-bar').style.display = 'none';
-            startX = startY = endX = endY = undefined;
+
+            // Highlight the selected square
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(clickedX * squareSize, clickedY * squareSize, squareSize, squareSize);
+
+            // Display information about the selected square
+            document.getElementById('price-info').textContent = `Selected Square: (${clickedX}, ${clickedY})`;
+            document.getElementById('bottom-bar').style.display = 'block';
+
+            // Pass selection coordinates and size to the iframe
+            const iframe = document.querySelector('#popup-content iframe');
+            width = 1;
+            height = 1;
+            iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${clickedX}&startY=${clickedY}&width=${width}&height=${height}`;
+
+        } else {
+            alert('Selection overlaps with a reserved area. Please try again.');
         }
-    
-        // Handle mouse events
-        canvas.addEventListener('mousedown', (event) => {
-            clearSelection();
-            isDragging = true;
-    
-            const rect = canvas.getBoundingClientRect();
-            startX = Math.floor((event.clientX - rect.left) / squareSize);
-            startY = Math.floor((event.clientY - rect.top) / squareSize);
-        });
-    
-        canvas.addEventListener('mousemove', (event) => {
-            if (isDragging) {
-                const rect = canvas.getBoundingClientRect();
-                endX = Math.floor((event.clientX - rect.left) / squareSize);
-                endY = Math.floor((event.clientY - rect.top) / squareSize);
-    
-                // ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-                // Clear the canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                drawGrid();
-                drawReservedAreas();
-                drawSelectionRectangle();
-            }
-        });
-    
-        canvas.addEventListener('mouseup', () => {
-            isDragging = false;
-    
-            if (startX !== undefined && startY !== undefined && endX !== undefined && endY !== undefined) {
-                const left = Math.min(startX, endX) * 10;
-                const top = Math.min(startY, endY) * 10;
-                const right = Math.max(startX, endX) * 10;
-                const bottom = Math.max(startY, endY) * 10;
+    });
 
-                console.log(left, top, right, bottom);
+    // Show upload popup
+    document.getElementById('upload-image').addEventListener('click', () => {
+        document.getElementById('popup-overlay').style.display = 'block';
+    });
 
-                if (isSelectionValid(left, top, right, bottom)) {
-                    const width = Math.abs(endX - startX) + 1;
-                    const height = Math.abs(endY - startY) + 1;
-                    const totalPrice = width * height;
-    
-                    document.getElementById('price-info').textContent = `Total Price: $${totalPrice}`;
-                    document.getElementById('bottom-bar').style.display = 'block';
-                    document.getElementById('clear-selection').style.display = 'block';
-    
-                    // Pass selection coordinates and size to the iframe
-                    const iframe = document.querySelector('#popup-content iframe');
-                    iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${left}&startY=${top}&width=${width}&height=${height}`;
-                } else {
-                    alert('Selection overlaps with a reserved area. Please try again.');
-                    clearSelection();
-                }
-            }
-        });
-    
-        // Show upload popup
-        document.getElementById('upload-image').addEventListener('click', () => {
-            document.getElementById('popup-overlay').style.display = 'block';
-        });
-    
-        // Close upload popup
-        document.getElementById('close-popup').addEventListener('click', () => {
-            document.getElementById('popup-overlay').style.display = 'none';
-        });
-    
-        // Clear selection button handler
-        document.getElementById('clear-selection').addEventListener('click', clearSelection);
-    </script>
+    // Close upload popup
+    document.getElementById('close-popup').addEventListener('click', () => {
+        document.getElementById('popup-overlay').style.display = 'none';
+    });
+
+
+</script>
     
 </body>
 </html>
