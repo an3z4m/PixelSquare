@@ -1,1 +1,20 @@
-[]
+[
+    {
+        "startX": 110,
+        "startY": 70,
+        "width": 40,
+        "height": 50
+    },
+    {
+        "startX": 320,
+        "startY": 240,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 470,
+        "startY": 440,
+        "width": 70,
+        "height": 70
+    }
+]
