@@ -25,7 +25,21 @@
             margin-top: 20px;
         }
 
-        /* Bottom bar styles */
+        #mode-toggle {
+            background-color: #f60;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        #mode-toggle:hover {
+            background-color: #e55;
+        }
+
         #bottom-bar {
             position: fixed;
             bottom: 0;
@@ -35,15 +49,12 @@
             color: #fff;
             display: none;
             padding: 15px;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.5);
-            z-index: 10;
             text-align: center;
         }
 
         #bottom-bar p {
             margin: 0;
             font-size: 16px;
-            display: inline-block;
         }
 
         #bottom-bar button {
@@ -60,8 +71,6 @@
         #bottom-bar button:hover {
             background-color: #e55;
         }
-
-        /* Popup styles */
         #popup-overlay {
             display: none;
             position: fixed;
@@ -79,18 +88,16 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: #fff;
+            color: #000;
             padding: 20px;
-            width: 90%;
-            height: 90%;
+            width: 300px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
         }
 
-        #popup-content iframe {
-            width: 100%;
-            height: 80%;
-            border: none;
+        #popup-content h2 {
+            margin-top: 0;
         }
 
         #popup-content button {
@@ -111,10 +118,11 @@
 </head>
 <body>
     <h1>Claim Your Pixels</h1>
+    <button id="mode-toggle">Switch to Viewing Mode</button>
     <canvas id="grid-canvas" width="1000" height="1000"></canvas>
 
     <div id="info">
-        <p>Select a rectangular area to claim.</p>
+        <p id="mode-info">Editing Mode: Select a rectangular area to claim.</p>
     </div>
 
     <div id="bottom-bar">
@@ -124,8 +132,9 @@
 
     <div id="popup-overlay">
         <div id="popup-content">
-            <h2>Upload Your Image</h2>
-            <iframe src="<?php echo ROOT_THEME_URL.'/upload.php'; ?>"></iframe>
+            <h2 id="business-name">Business Name</h2>
+            <p id="business-email">Email: example@example.com</p>
+            <p id="business-twitter">Twitter: @example</p>
             <button id="close-popup">Close</button>
         </div>
     </div>
@@ -171,100 +180,97 @@ console.log("reservedAreas:"+reservedAreas);
 if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
 
     </script>
+
     <script>
-    const canvas = document.getElementById('grid-canvas');
-    const ctx = canvas.getContext('2d');
-    const squareSize = 10; // Each "pixel" block size
+        const canvas = document.getElementById('grid-canvas');
+        const ctx = canvas.getContext('2d');
+        const squareSize = 10;
+        const modeToggleBtn = document.getElementById('mode-toggle');
+        const modeInfo = document.getElementById('mode-info');
+        let isEditingMode = true;
 
-    drawGrid();
-    drawReservedAreas();
 
-    // Draw a 100x100 grid on top of the background
-    function drawGrid() {
-        ctx.strokeStyle = 'rgba(0, 255, 0, 1)'; // Light white grid lines
-        ctx.lineWidth = 0.2;
-
-        for (let x = 0; x <= canvas.width; x += squareSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-            ctx.stroke();
-        }
-
-        for (let y = 0; y <= canvas.height; y += squareSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvas.width, y);
-            ctx.stroke();
-        }
-    }
-
-    // Draw reserved areas on the canvas
-    function drawReservedAreas() {
-        if (reservedAreas.length === 0) return;
-        reservedAreas.forEach(area => {
-            ctx.fillStyle = 'rgba(0,0,255,0.2)';
-            ctx.fillRect(area.startX, area.startY, area.width, area.height);
-            ctx.strokeStyle = '#ccc';
-            ctx.strokeRect(area.startX, area.startY, area.width, area.height);
-        });
-    }
-
-    // Check if the clicked square is in a reserved area
-    function isSelectionValid(x, y) {
-        for (const area of reservedAreas) {
-            const withinX = x >= area.startX && x <= (area.startX + (area.width / squareSize));
-            const withinY = y >= area.startY && y <= (area.startY + (area.height / squareSize));
-
-            if (withinX && withinY) {
-                return false; // Overlap detected
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(0, 255, 0, 1)';
+            ctx.lineWidth = 0.2;
+            for (let x = 0; x <= canvas.width; x += squareSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= canvas.height; y += squareSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
             }
         }
-        return true;
-    }
 
-    // Handle click or touch events
-    canvas.addEventListener('click', (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const clickedX = Math.floor((event.clientX - rect.left) / squareSize);
-        const clickedY = Math.floor((event.clientY - rect.top) / squareSize);
-
-        if (isSelectionValid(clickedX, clickedY)) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
-            drawReservedAreas();
-
-            // Highlight the selected square
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.fillRect(clickedX * squareSize, clickedY * squareSize, squareSize, squareSize);
-
-            // Display information about the selected square
-            document.getElementById('price-info').textContent = `Selected Square: (${clickedX}, ${clickedY})`;
-            document.getElementById('bottom-bar').style.display = 'block';
-
-            // Pass selection coordinates and size to the iframe
-            const iframe = document.querySelector('#popup-content iframe');
-            width = 1;
-            height = 1;
-            iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${clickedX}&startY=${clickedY}&width=${width}&height=${height}`;
-
-        } else {
-            alert('Selection overlaps with a reserved area. Please try again.');
+        function drawReservedAreas() {
+            reservedAreas.forEach(area => {
+                ctx.fillStyle = 'rgba(0, 0, 255, 0.2)';
+                ctx.fillRect(area.startX, area.startY, area.width, area.height);
+                ctx.strokeStyle = '#ccc';
+                ctx.strokeRect(area.startX, area.startY, area.width, area.height);
+            });
         }
-    });
 
-    // Show upload popup
-    document.getElementById('upload-image').addEventListener('click', () => {
-        document.getElementById('popup-overlay').style.display = 'block';
-    });
+        function isOverReservedArea(x, y) {
+            return reservedAreas.find(area =>
+                x >= area.startX && x < area.startX + area.width &&
+                y >= area.startY && y < area.startY + area.height
+            );
+        }
 
-    // Close upload popup
-    document.getElementById('close-popup').addEventListener('click', () => {
-        document.getElementById('popup-overlay').style.display = 'none';
-    });
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const clickedX = Math.floor((event.clientX - rect.left) / squareSize) * squareSize;
+            const clickedY = Math.floor((event.clientY - rect.top) / squareSize) * squareSize;
+
+            if (isEditingMode) {
+                if (!isOverReservedArea(clickedX, clickedY)) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawGrid();
+                    drawReservedAreas();
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                    ctx.fillRect(clickedX, clickedY, squareSize, squareSize);
+                } else {
+                    alert('Cannot edit reserved area.');
+                }
+            } else {
+                const area = isOverReservedArea(clickedX, clickedY);
+                if (area) {
+                    showBusinessCard(area);
+                }
+            }
+        }
+
+        
+        function toggleMode() {
+            isEditingMode = !isEditingMode;
+            modeToggleBtn.textContent = isEditingMode ? 'Switch to Viewing Mode' : 'Switch to Editing Mode';
+            modeInfo.textContent = isEditingMode ? 'Editing Mode: Select a rectangular area to claim.' : 'Viewing Mode: Click on reserved areas for details.';
+        }
+
+        document.getElementById('close-popup').addEventListener('click', () => {
+            document.getElementById('popup-overlay').style.display = 'none';
+        });
+
+        canvas.addEventListener('click', handleCanvasClick);
+        modeToggleBtn.addEventListener('click', toggleMode);
+
+        
+        function showBusinessCard(area) {
+            document.getElementById('popup-overlay').style.display = 'block';
+            document.getElementById('business-name').textContent = area.name;
+            document.getElementById('business-email').textContent = `Email: ${area.email}`;
+            document.getElementById('business-twitter').textContent = `Twitter: ${area.twitter}`;
+        }
 
 
-</script>
-    
+        drawGrid();
+        drawReservedAreas();
+    </script>
 </body>
 </html>
