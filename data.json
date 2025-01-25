@@ -76,5 +76,11 @@
         "startY": 280,
         "width": 10,
         "height": 10
+    },
+    {
+        "startX": 910,
+        "startY": 790,
+        "width": 10,
+        "height": 10
     }
 ]

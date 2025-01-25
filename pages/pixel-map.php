@@ -21,6 +21,13 @@
             background-image: url('<?php echo ROOT_THEME_URL; ?>/background.webp?nocache=<?php echo time(); ?>');
         }
 
+        @media (max-width: 768px) {
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+        }
+
         #info {
             margin-top: 20px;
         }
@@ -135,21 +142,54 @@
         }
 
 
+        @media (min-width: 768px) {
+            canvas {
+                width: 100;
+                height: 100%;
+            }
+            .main {
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+
+            .main {
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                width: 100%;
+                align-items: center;
+                height: 100vh;
+                flex-wrap: wrap;
+            }
+        }
+
+
     </style>
 </head>
 <body>
-    <h1>Claim Your Pixels</h1>
-    <button id="mode-toggle">Switch to Viewing Mode</button>
-    <canvas id="grid-canvas" width="1000" height="1000"></canvas>
-
-    <div id="info">
-        <p id="mode-info">Editing Mode: Select a rectangular area to claim.</p>
+    <!-- <h1>Claim Your Pixels</h1> -->
+    <div class="main">
+        <button id="mode-toggle">Switch to Viewing Mode</button>
+        <canvas id="grid-canvas" width="1000" height="1000"></canvas>
+        <div id="info">
+            <p id="mode-info">Editing Mode: Select a rectangular area to claim.</p>
+        </div>
     </div>
-
     <div id="bottom-bar">
         <p id="price-info"></p>
         <button id="upload-image">Upload Image</button>
     </div>
+
 
     <div class="popup-overlay" id="business-info-popup">
         <div class="popup-content">
@@ -215,7 +255,7 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
     <script>
         const canvas = document.getElementById('grid-canvas');
         const ctx = canvas.getContext('2d');
-        const squareSize = 10;
+        var squareSize = 10;
         const modeToggleBtn = document.getElementById('mode-toggle');
         const modeInfo = document.getElementById('mode-info');
         let isEditingMode = true;
@@ -239,7 +279,6 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
         }
 
         function drawReservedAreas() {
-            console.log('drawReservedAreas:'+reservedAreas);
             reservedAreas.forEach(area => {
                 // ctx.fillStyle = 'rgba(0, 0, 255, 0.2)';
                 // ctx.fillRect(area.startX, area.startY, area.width, area.height);
@@ -257,34 +296,39 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
         }
 
         function handleCanvasClick(event) {
-            const rect = canvas.getBoundingClientRect();
-            const clickedX = Math.floor((event.clientX - rect.left) / squareSize) * squareSize;
-            const clickedY = Math.floor((event.clientY - rect.top) / squareSize) * squareSize;
+    const rect = canvas.getBoundingClientRect();
 
-            if (isEditingMode) {
-                if (!isOverReservedArea(clickedX, clickedY)) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    drawGrid();
-                    drawReservedAreas();
-                    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-                    ctx.fillRect(clickedX, clickedY, squareSize, squareSize);
-                    
-                    // Show upload popup
-                        
-                    document.getElementById('bottom-bar').style.display = 'block';
-                    const iframe = document.querySelector('#image-upload-popup iframe');
-                    iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${clickedX}&startY=${clickedY}&width=${squareSize}&height=${squareSize}`;
-                
-                } else {
-                    alert('Cannot edit reserved area.');
-                }
-            } else {
-                const area = isOverReservedArea(clickedX, clickedY);
-                if (area) {
-                    showBusinessCard(area);
-                }
-            }
+    // Calculate scaling factors
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    // Adjust coordinates based on scaling factors
+    const clickedX = Math.floor(((event.clientX - rect.left) * scaleX) / squareSize) * squareSize;
+    const clickedY = Math.floor(((event.clientY - rect.top) * scaleY) / squareSize) * squareSize;
+
+    if (isEditingMode) {
+        if (!isOverReservedArea(clickedX, clickedY)) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            drawReservedAreas();
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.fillRect(clickedX, clickedY, squareSize, squareSize);
+
+            // Show upload popup
+            document.getElementById('bottom-bar').style.display = 'block';
+            const iframe = document.querySelector('#image-upload-popup iframe');
+            iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${clickedX}&startY=${clickedY}&width=${squareSize}&height=${squareSize}`;
+        } else {
+            alert('Cannot edit reserved area.');
         }
+    } else {
+        const area = isOverReservedArea(clickedX, clickedY);
+        if (area) {
+            showBusinessCard(area);
+        }
+    }
+}
+
 
         
         function toggleMode() {
