@@ -1,11 +1,10 @@
 <?php 
-	$zoom_factor = 10;
+    $zoom_factor = 10;
 
     $startX = $_GET['startX'] * $zoom_factor;
     $startY = $_GET['startY'] * $zoom_factor;
-    $width = $_GET['width'] * 10 * $zoom_factor;
-    $height = $_GET['height'] * 10 * $zoom_factor;
-    // var_dump($_GET);
+    $width = $_GET['width'] * $zoom_factor;
+    $height = $_GET['height'] * $zoom_factor;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,58 +14,135 @@
     <title>Image Upload, Crop, and Resize</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
     <style>
+        /* General Styles */
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
         }
         .container {
-            max-width: 600px;
-            margin: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
         }
-        #result {
-            margin-top: 20px;
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
         }
-        #croppedImage {
-            display: none;
-            max-width: 100%;
+
+        label {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
         }
+
+        input[type="file"] {
+            font-size: 0.9rem;
+            margin: 10px 0;
+        }
+
         img {
             max-width: 100%;
+            border-radius: 10px;
+            display: none;
         }
+
         button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            color: #fff;
+            background: #007bff;
             border: none;
-            cursor: pointer;
             border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
+
         button:hover {
-            background-color: #0056b3;
+            background: #0056b3;
+        }
+
+        .progress-container {
+            display: none;
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            width: 0;
+            background-color: #28a745;
+            transition: width 0.4s ease;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+            button {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Upload, Crop, and Resize Image</h1>
 
-<div class="container">
-    <h1>Upload, Crop, and Resize Image</h1>
+        <form id="imageForm" enctype="multipart/form-data">
+            <label for="image">Choose a <?php echo "$width x $height px"; ?> image:</label>
+            <input type="file" id="image" name="image" accept="image/png, image/jpeg" required>
+            
+            <img id="imagePreview" alt="Upload an image">
+            
+            <button type="button" id="cropButton" style="display: none;">Crop & Submit</button>
+        </form>
 
-    <form id="imageForm" enctype="multipart/form-data">
-        <label for="image">Choose a <?php echo "$width x  $height px"; ?> image:</label>
-        <input type="file" id="image" name="image" accept="image/png, image/jpeg" required>
-        <br><br>
-        <div>
-            <img id="imagePreview" alt="Upload an image" style="display:none; max-width:100%;">
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
         </div>
-        <br>
-        <button type="button" id="cropButton" style="display:none;">Crop & Submit</button>
-    </form>
-
-    <div id="result">
-        <h2>Resulting Image:</h2>
-        <img id="outputImage" alt="Resulting image will appear here" src="background.webp?nocache=<?php echo time(); ?>">
+        <p class="status" id="status"></p>
     </div>
-</div>
+
+    <script>
+        // JavaScript to handle file input and crop preview
+        document.getElementById('image').addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const imagePreview = document.getElementById('imagePreview');
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    document.getElementById('cropButton').style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script>
@@ -77,6 +153,8 @@
     const imagePreview = document.getElementById('imagePreview');
     const cropButton = document.getElementById('cropButton');
     const outputImage = document.getElementById('outputImage');
+    const progressBar = document.getElementById('progressBar');
+    const status = document.getElementById('status');
 
     const width   =  '<?php echo $width; ?>';
     const height  =  '<?php echo $height; ?>';
@@ -91,13 +169,6 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    // Validate image dimensions
-                    // if (img.width !== 50 || img.height !== 50) {
-                    //     alert('Image must be exactly 50x50px. Please upload a valid image.');
-                    //     fileInput.value = ''; // Reset the input
-                    //     return;
-                    // }
-
                     // Set preview and initialize Cropper.js
                     imagePreview.src = e.target.result;
                     imagePreview.style.display = 'block';
@@ -135,19 +206,42 @@
             formData.append('width', width);
             formData.append('height', height);
 
+            // Reset progress bar
+            progressBar.style.width = '0';
+            status.textContent = '';
+
             // Send the cropped image to the PHP script
-            fetch('process-image.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.blob())
-            .then(blob => {
-                const imageUrl = URL.createObjectURL(blob);
-                outputImage.src = imageUrl;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'process-image.php', true);
+            
+            document.querySelector('.progress-container').style.display = 'block';
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    status.textContent = `Uploading... ${Math.round(percentComplete-1)}%`;
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    progressBar.style.width = '100%';
+                    status.textContent = 'Upload complete!, you will be redirected to the main page';
+                    window.setTimeout(() => {
+                        // window.location.reload();
+                        window.parent.postMessage('reloadParentPage', '*');
+                    }, 2000);
+                } else {
+                    status.textContent = 'Upload failed. Please try again.';
+                }
+            };
+
+            xhr.onerror = () => {
+                status.textContent = 'An error occurred during the upload.';
+            };
+
+            xhr.send(formData);
         }, 'image/png');
     });
 </script>

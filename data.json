@@ -28,5 +28,53 @@
         "startY": 11,
         "width": 10,
         "height": 10
+    },
+    {
+        "startX": 300,
+        "startY": 150,
+        "width": 100,
+        "height": 100
+    },
+    {
+        "startX": 120,
+        "startY": 400,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 430,
+        "startY": 310,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 430,
+        "startY": 310,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 430,
+        "startY": 310,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 430,
+        "startY": 310,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 340,
+        "startY": 600,
+        "width": 10,
+        "height": 10
+    },
+    {
+        "startX": 530,
+        "startY": 280,
+        "width": 10,
+        "height": 10
     }
 ]

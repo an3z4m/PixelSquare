@@ -73,7 +73,8 @@
         #bottom-bar button:hover {
             background-color: #e55;
         }
-        #popup-overlay {
+
+        .popup-overlay {
             display: none;
             position: fixed;
             top: 0;
@@ -84,7 +85,7 @@
             z-index: 20;
         }
 
-        #popup-content {
+        .popup-content {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -98,24 +99,42 @@
             text-align: center;
         }
 
-        #popup-content h2 {
-            margin-top: 0;
-        }
-
-        #popup-content button {
+        .popup-content button.close-popup {
             background-color: #f60;
             color: #fff;
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 5px 7px;
             cursor: pointer;
-            border-radius: 5px;
-            margin-top: 10px;
+            border-radius: 100%;
+            position: absolute;
+            right: -25px;
+            top: -25px;
         }
 
-        #popup-content button:hover {
+        #image-upload-popup .popup-content {
+            padding: 10px;
+            width: 80%;
+            height: 80%;
+        }
+
+        #image-upload-popup iframe {
+            width: 100%;
+            display: block;
+            height: 100%;
+            border: none;
+        }
+
+
+        .popup-content h2 {
+            margin-top: 0;
+        }
+
+
+        .popup-content .close-popup:hover {
             background-color: #e55;
         }
+
+
     </style>
 </head>
 <body>
@@ -132,12 +151,19 @@
         <button id="upload-image">Upload Image</button>
     </div>
 
-    <div id="popup-overlay">
-        <div id="popup-content">
+    <div class="popup-overlay" id="business-info-popup">
+        <div class="popup-content">
             <h2 id="business-name">Business Name</h2>
             <p id="business-email">Email: example@example.com</p>
             <p id="business-twitter">Twitter: @example</p>
-            <button id="close-popup">Close</button>
+            <button class="close-popup">X</button>
+        </div>
+    </div>
+
+    <div class="popup-overlay" id="image-upload-popup">
+        <div class="popup-content">
+            <iframe src="<?php echo ROOT_THEME_URL.'/upload.php'; ?>"></iframe>
+            <button class="close-popup">X</button>
         </div>
     </div>
 
@@ -169,14 +195,17 @@ async function loadJsonData() {
         data.forEach((row, index) => {
             console.log(`Row ${index + 1}:`, row);
         });
-        return data;
+        reservedAreas = data;
+        drawReservedAreas();
+
+
     } catch (error) {
         console.error("Error loading JSON file:", error);
-        return [];
+        reservedAreas = [];
     }
 }
 
-reservedAreas = loadJsonData();
+loadJsonData();
 
 console.log("reservedAreas:"+reservedAreas);
 if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
@@ -210,10 +239,12 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
         }
 
         function drawReservedAreas() {
+            console.log('drawReservedAreas:'+reservedAreas);
             reservedAreas.forEach(area => {
-                ctx.fillStyle = 'rgba(0, 0, 255, 0.2)';
-                ctx.fillRect(area.startX, area.startY, area.width, area.height);
-                ctx.strokeStyle = '#ccc';
+                // ctx.fillStyle = 'rgba(0, 0, 255, 0.2)';
+                // ctx.fillRect(area.startX, area.startY, area.width, area.height);
+                ctx.strokeStyle = 'orange';
+                ctx.lineWidth   = 2;
                 ctx.strokeRect(area.startX, area.startY, area.width, area.height);
             });
         }
@@ -237,6 +268,13 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
                     drawReservedAreas();
                     ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
                     ctx.fillRect(clickedX, clickedY, squareSize, squareSize);
+                    
+                    // Show upload popup
+                        
+                    document.getElementById('bottom-bar').style.display = 'block';
+                    const iframe = document.querySelector('#image-upload-popup iframe');
+                    iframe.src = `<?php echo ROOT_THEME_URL; ?>/upload.php?startX=${clickedX}&startY=${clickedY}&width=${squareSize}&height=${squareSize}`;
+                
                 } else {
                     alert('Cannot edit reserved area.');
                 }
@@ -255,24 +293,36 @@ if(!reservedAreas || reservedAreas.length == undefined) reservedAreas = [];
             modeInfo.textContent = isEditingMode ? 'Editing Mode: Select a rectangular area to claim.' : 'Viewing Mode: Click on reserved areas for details.';
         }
 
-        document.getElementById('close-popup').addEventListener('click', () => {
-            document.getElementById('popup-overlay').style.display = 'none';
-        });
+        document.querySelectorAll('.close-popup').forEach((button)=>button.addEventListener('click', () => {
+            button.closest('.popup-overlay').style.display = 'none';
+        }));
 
+        document.getElementById('upload-image').addEventListener('click', () => {
+            document.querySelector('#image-upload-popup').style.display = 'block';
+        });
+        
         canvas.addEventListener('click', handleCanvasClick);
         modeToggleBtn.addEventListener('click', toggleMode);
 
         
         function showBusinessCard(area) {
-            document.getElementById('popup-overlay').style.display = 'block';
+            document.querySelector('#business-info-popup').style.display = 'block';
+            // document.querySelector('.popup-overlay').style.display = 'block';
             document.getElementById('business-name').textContent = area.name;
             document.getElementById('business-email').textContent = `Email: ${area.email}`;
             document.getElementById('business-twitter').textContent = `Twitter: ${area.twitter}`;
         }
-
-
         drawGrid();
-        drawReservedAreas();
     </script>
+
+<script>
+    window.addEventListener('message', function(event) {
+      // Validate the message
+      if (event.data === 'reloadParentPage') {
+        window.location.reload();
+      }
+    });
+  </script>
+
 </body>
 </html>
