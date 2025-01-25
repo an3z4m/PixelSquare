@@ -26,6 +26,8 @@
         }
 
         #mode-toggle {
+            display: block;
+            margin: auto;
             background-color: #f60;
             color: #fff;
             border: none;
