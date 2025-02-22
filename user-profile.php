@@ -2,16 +2,22 @@
 // Template Name: Minimal Linktree
 
 // Get the user ID from the query string
-$user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
+$user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : get_current_user_id();
+
 
 if (!$user_id || !get_userdata($user_id)) {
     wp_die('User not found or invalid user ID.');
 }
 
+$user = get_user($user_id);
+
+$twitter_username = $user->user_login;
+
 // Fetch user meta
 $email = get_the_author_meta('user_email', $user_id);
 $website = get_user_meta($user_id, 'website', true);
-$twitter = get_user_meta($user_id, 'twitter', true);
+
+// $twitter = get_user_meta($user_id, 'twitter', true);
 $linkedin = get_user_meta($user_id, 'linkedin', true);
 $instagram = get_user_meta($user_id, 'instagram', true);
 ?>
@@ -20,7 +26,7 @@ $instagram = get_user_meta($user_id, 'instagram', true);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linktree Profile</title>
+    <title>User Profile</title>
     <style>
         body {
             background-color: #f8f9fa;
@@ -76,14 +82,7 @@ $instagram = get_user_meta($user_id, 'instagram', true);
     <div class="profile-container">
         <h1>User Profile</h1>
 
-        <?php if ($twitter): ?>
-            <?php 
-            // Extract Twitter username
-            $twitter_username = '';
-            if (preg_match('/twitter\.com\/([^\/]+)/', $twitter, $matches)) {
-                $twitter_username = $matches[1];
-            }
-            ?>
+        <?php if ($twitter_username): ?>
             <?php if ($twitter_username): ?>
                 <div class="twitter-image">
                     <img src="https://unavatar.io/twitter/<?php echo esc_attr($twitter_username); ?>" alt="Twitter Profile Image">
@@ -95,8 +94,8 @@ $instagram = get_user_meta($user_id, 'instagram', true);
             <?php if ($website): ?>
                 <a href="<?php echo esc_url($website); ?>" target="_blank">Website</a>
             <?php endif; ?>
-            <?php if ($twitter): ?>
-                <a href="<?php echo esc_url($twitter); ?>" target="_blank">Twitter</a>
+            <?php if ($twitter_username): ?>
+                <a href="<?php echo "https://twitter.com/$twitter_username"; ?>" target="_blank">Twitter</a>
             <?php endif; ?>
             <?php if ($linkedin): ?>
                 <a href="<?php echo esc_url($linkedin); ?>" target="_blank">LinkedIn</a>

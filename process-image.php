@@ -1,24 +1,12 @@
 <?php
+
 // Check if an image was uploaded
 if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-
-    include 'save-business-card.php';
-	$zoom_factor = 10;
-    // Create an associative array to represent the row
-    $row = [
-        'startX' => $_POST['startX'] / $zoom_factor ,
-        'startY' => $_POST['startY'] / $zoom_factor ,
-        'width' => $_POST['width'] / $zoom_factor , // Target width in the background image
-        'height' => $_POST['height'] / $zoom_factor , // Target height in the background image
-    ];
-
-    save_business_card($row);
-
     $uploadedImagePath = $_FILES['image']['tmp_name'];
 
     // Path to the high-resolution background image
-    $inputFilePath = 'background.webp';
-    $outputFilePath = 'background.webp';//'output.webp';
+    $inputFilePath = ROOT_THEME_DIR.'/background.webp';
+    $outputFilePath = ROOT_THEME_DIR.'/background.webp';//'output.webp';
 
     // $inputFilePath = 'background-tmp.webp';
     // copy($outputFilePath, $inputFilePath);
@@ -74,20 +62,52 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
         $targetHeight
     );
 
+    header("Content-type: application/json; charset=utf-8");
+
+
     // Save the high-quality WebP output
-    imagewebp($background, $outputFilePath, 90); // Quality set to 90
+     // Quality set to 90
+    if(imagewebp($background, $outputFilePath, 90)){
+        // Free up memory
+        imagedestroy($background);
+        imagedestroy($uploadedImage);
+        imagedestroy($resizedImage);
+
+        include_once ROOT_THEME_DIR.'/save-business-card.php';
+        $zoom_factor = 10;
+        // Create an associative array to represent the row
+        $image_data = [
+            'username'=> $_POST['username'] ,
+            'startX' => $_POST['startX'] / $zoom_factor ,
+            'startY' => $_POST['startY'] / $zoom_factor ,
+            'width' => $_POST['width'] / $zoom_factor , // Target width in the background image
+            'height' => $_POST['height'] / $zoom_factor , // Target height in the background image
+        ];
+        save_business_card($image_data);
+
+        // $startX = $_POST['startX'] / $zoom_factor;
+        // $startY = $_POST['startY'] / $zoom_factor;
+        // $width  = $_POST['width'] / $zoom_factor; // Target width in the background image
+        // $height = $_POST['height'] / $zoom_factor; // Target height in the background image
+
+        // save_business_card($startX, $startY, $width, $height);
+
+        echo json_encode(array('status'=>'200', 'message' => 'saved succesfully!'));
+    }else{
+        echo json_encode(array('status'=>'400', 'message' => 'error detected!'));
+    }
 
 
-    // Set header to output image directly
-    header('Content-Type: image/webp');
+    // // Set header to output image directly
+    // header('Content-Type: image/webp');
 
-    // Output the final image (optional for debugging)
-    imagewebp($background);
+    // // Output the final image (optional for debugging)
+    // imagewebp($background);
 
-    // Free up memory
-    imagedestroy($background);
-    imagedestroy($uploadedImage);
-    imagedestroy($resizedImage);
+    // // Free up memory
+    // imagedestroy($background);
+    // imagedestroy($uploadedImage);
+    // imagedestroy($resizedImage);
 
 } else {
     echo "Error uploading image.";

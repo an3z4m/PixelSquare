@@ -1,85 +1,8 @@
 [
     {
-        "startX": 110,
-        "startY": 70,
-        "width": 40,
-        "height": 50
-    },
-    {
-        "startX": 320,
-        "startY": 240,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 470,
-        "startY": 440,
-        "width": 70,
-        "height": 70
-    },
-    {
-        "startX": 29,
-        "startY": 55,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 56,
-        "startY": 11,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 300,
-        "startY": 150,
-        "width": 100,
-        "height": 100
-    },
-    {
-        "startX": 120,
-        "startY": 400,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 430,
-        "startY": 310,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 430,
-        "startY": 310,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 430,
-        "startY": 310,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 430,
-        "startY": 310,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 340,
-        "startY": 600,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 530,
-        "startY": 280,
-        "width": 10,
-        "height": 10
-    },
-    {
-        "startX": 910,
-        "startY": 790,
+        "username": "realdonaldtrump",
+        "startX": 400,
+        "startY": 510,
         "width": 10,
         "height": 10
     }

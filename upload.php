@@ -1,11 +1,36 @@
 <?php 
+    // Get the user ID from the query string
+    $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : get_current_user_id();
+    if (!$user_id || !get_userdata($user_id)) {
+        wp_die('User not found or invalid user ID. You need to create an account first!');
+    }
+
+    // $image_data = get_user_meta($user_id, 'image_data', true);
+    // if(!empty($image_data)){
+    //     wp_die('You already have an image data:'.json_encode($image_data));
+    // } 
+
+    $user = get_user($user_id);
+    $twitter_username = $user->user_login;
+
+    // Fetch the profile image URL
+    $profile_image_src = 'https://pbs.twimg.com/profile_images/874276197357596672/kUuht00m_normal.jpg';
+
+    $profile_image_src = "https://unavatar.io/twitter/$twitter_username";
+
+    $base64Image = convertImageToBase64($profile_image_src);
+
+    //getTwitterProfileImage($twitter_username);
+
     $zoom_factor = 10;
 
     $startX = $_GET['startX'] * $zoom_factor;
     $startY = $_GET['startY'] * $zoom_factor;
     $width = $_GET['width'] * $zoom_factor;
     $height = $_GET['height'] * $zoom_factor;
+    
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,16 +133,19 @@
     </style>
 </head>
 <body>
+
+
     <div class="container">
         <h1>Upload, Crop, and Resize Image</h1>
 
         <form id="imageForm" enctype="multipart/form-data">
             <label for="image">Choose a <?php echo "$width x $height px"; ?> image:</label>
-            <input type="file" id="image" name="image" accept="image/png, image/jpeg" required>
+            <input type="file" id="image" name="image" accept="image/png, image/jpeg">
             
-            <img id="imagePreview" alt="Upload an image">
+            <!-- Set default src to the profile image -->
+            <img id="imagePreview" src="<?php echo $base64Image; ?>" alt="Profile image">
             
-            <button type="button" id="cropButton" style="display: none;">Crop & Submit</button>
+            <button type="button" id="cropButton" style="display: inline-block;">Crop & Submit</button>
         </form>
 
         <div class="progress-container">
@@ -127,124 +155,83 @@
     </div>
 
     <script>
-        // JavaScript to handle file input and crop preview
-        document.getElementById('image').addEventListener('change', function () {
+        let cropper;
+        const imageForm = document.getElementById('imageForm');
+        const fileInput = document.getElementById('image');
+        const imagePreview = document.getElementById('imagePreview');
+        const cropButton = document.getElementById('cropButton');
+        const progressBar = document.getElementById('progressBar');
+        const status = document.getElementById('status');
+
+        const width = '<?php echo $width; ?>';
+        const height = '<?php echo $height; ?>';
+
+        // Initialize Cropper.js on the default profile image
+        window.addEventListener('load', () => {
+            cropper = new Cropper(imagePreview, {
+                aspectRatio: width / height,
+                viewMode: 1,
+                autoCropArea: 1,
+            });
+        });
+
+        // Update Cropper.js when a new image is uploaded
+        fileInput.addEventListener('change', function () {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    const imagePreview = document.getElementById('imagePreview');
                     imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                    document.getElementById('cropButton').style.display = 'inline-block';
+
+                    // Reinitialize Cropper.js with the new image
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    cropper = new Cropper(imagePreview, {
+                        aspectRatio: width / height,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                    });
                 };
                 reader.readAsDataURL(file);
             }
         });
+
+        cropButton.addEventListener('click', function () {
+            const croppedCanvas = cropper.getCroppedCanvas({
+                width: width,
+                height: height,
+            });
+
+            croppedCanvas.toBlob(function (blob) {
+                const formData = new FormData();
+                formData.append('image', blob, 'cropped_image.png');
+                formData.append('startX', <?php echo $startX; ?>);
+                formData.append('startY', <?php echo $startY; ?>);
+                formData.append('width', <?php echo $width; ?>);
+                formData.append('height', <?php echo $height; ?>);
+                formData.append('username', '<?php echo $twitter_username; ?>');
+
+                
+
+                // Handle the AJAX request (unchanged)
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '<?php echo site_url("process-image"); ?>', true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        status.textContent = 'Upload complete!';
+                        window.setTimeout(() => {
+                            window.parent.postMessage('reloadParentPage', '*');
+                        }, 2000);
+                    } else {
+                        status.textContent = 'Upload failed. Please try again.';
+                    }
+                };
+                xhr.send(formData);
+            });
+        });
     </script>
 
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-<script>
-    let cropper;
-    let croppedCanvas;
-    const imageForm = document.getElementById('imageForm');
-    const fileInput = document.getElementById('image');
-    const imagePreview = document.getElementById('imagePreview');
-    const cropButton = document.getElementById('cropButton');
-    const outputImage = document.getElementById('outputImage');
-    const progressBar = document.getElementById('progressBar');
-    const status = document.getElementById('status');
-
-    const width   =  '<?php echo $width; ?>';
-    const height  =  '<?php echo $height; ?>';
-    const startX  =  '<?php echo $startX; ?>';
-    const startY  =  '<?php echo $startY; ?>';
-
-    fileInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    // Set preview and initialize Cropper.js
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-
-                    if (cropper) {
-                        cropper.destroy(); // Destroy existing cropper if any
-                    }
-                    cropper = new Cropper(imagePreview, {
-                        aspectRatio: width / height, // Force specific crop ratio (2:1 here)
-                        viewMode: 1,
-                        autoCropArea: 1, // Ensures the crop box fills the image initially
-                        dragMode: 'move', // Allow moving the image while cropping
-                        cropBoxResizable: false, // Disable resizing the crop box
-                        cropBoxMovable: false, // Fix the crop box in place
-                    });
-                    cropButton.style.display = 'inline-block';
-                };
-                img.src = e.target.result; // Load the image for dimension validation
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    cropButton.addEventListener('click', function() {
-        croppedCanvas = cropper.getCroppedCanvas({
-            width: width, // Fixed width for the cropped image
-            height: height, // Fixed height for the cropped image
-        });
-
-        croppedCanvas.toBlob(function(blob) {
-            const formData = new FormData();
-            formData.append('image', blob, 'cropped_image.png');
-            formData.append('startX', startX);
-            formData.append('startY', startY);
-            formData.append('width', width);
-            formData.append('height', height);
-
-            // Reset progress bar
-            progressBar.style.width = '0';
-            status.textContent = '';
-
-            // Send the cropped image to the PHP script
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'process-image.php', true);
-            
-            document.querySelector('.progress-container').style.display = 'block';
-
-            xhr.upload.onprogress = (event) => {
-                if (event.lengthComputable) {
-                    const percentComplete = (event.loaded / event.total) * 100;
-                    progressBar.style.width = percentComplete + '%';
-                    status.textContent = `Uploading... ${Math.round(percentComplete-1)}%`;
-                }
-            };
-
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    progressBar.style.width = '100%';
-                    status.textContent = 'Upload complete!, you will be redirected to the main page';
-                    window.setTimeout(() => {
-                        // window.location.reload();
-                        window.parent.postMessage('reloadParentPage', '*');
-                    }, 2000);
-                } else {
-                    status.textContent = 'Upload failed. Please try again.';
-                }
-            };
-
-            xhr.onerror = () => {
-                status.textContent = 'An error occurred during the upload.';
-            };
-
-            xhr.send(formData);
-        }, 'image/png');
-    });
-</script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 </body>
 </html>
