@@ -8,12 +8,24 @@ include_once 'wp-admin-profile-editor.php';
 
 include_once 'controllers/profile-controller.php';
 
-add_action( 'init', 'no_cache_headers' ); 
-function no_cache_headers() {
-  header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
-  header("Pragma: no-cache"); // HTTP 1.0
-  header("Expires: 0"); // Proxies
+// add_action( 'init', 'no_cache_headers' ); 
+// function no_cache_headers() {
+//   header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
+//   header("Pragma: no-cache"); // HTTP 1.0
+//   header("Expires: 0"); // Proxies
+// }
+
+function disable_home_page_cache() {
+  // Check if the current page is the home page
+  // if (is_home() || is_front_page()) {
+      // Send headers to prevent caching
+      header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+      header("Cache-Control: post-check=0, pre-check=0", false);
+      header("Pragma: no-cache");
+      header("Expires: Thu, 01 Jan 1970 00:00:00 GMT");
+  // }
 }
+add_action('send_headers', 'disable_home_page_cache');
 
 
 function getTwitterProfileImage($username) {
@@ -92,3 +104,26 @@ function convertImageToBase64($imageUrl)
 }
 
 
+
+add_filter('nsl_registration_user_data', 'sync_twitter_username_to_wp', 10, 2);
+
+function sync_twitter_username_to_wp($user_data, $provider) {
+    // Check if the provider is Twitter
+    if ($provider === 'twitter' && !empty($user_data['username'])) {
+        // Set the WordPress username to the Twitter username
+        $twitter_username = sanitize_user($user_data['username'], true); // Strict sanitization
+        $user_data['user_login'] = ensure_unique_username($twitter_username);
+    }
+    return $user_data;
+}
+
+// Helper function to ensure the username is unique
+function ensure_unique_username($username) {
+    $original_username = $username;
+    $counter = 1;
+    while (username_exists($username)) {
+        $username = $original_username . $counter; // Append a number if username exists
+        $counter++;
+    }
+    return $username;
+}
